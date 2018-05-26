@@ -1,10 +1,11 @@
-
+import datetime
 import pandas as pd
 
 DEBUG = True
+DATE_SHIFT = 341 #we have old base so need to add some days to existing values to check downtime features
 
-DOWNTIME = 24
-DOWNTIME_PU = 45
+DOWNTIME = 24 #downtime limit for red status
+DOWNTIME_PU = 45 #downtime limit for red status only for PU stations
 
 carriageDict={}
 stationDict={}
@@ -75,9 +76,9 @@ def get_data_from_db(datetimeStart='', carriageNumbers=None, operationStations=N
     '''
     Read data from CSV and then filter it by different condition
     :param datetimeStart: string in datetime format from which start reading data eg '2017-06-18 17:05:00'
-    :param carriageNumbers: list of carriages eg [52942752, 52965134]
+    :param carriageNumbers: list of carriages eg [52942752, 52965134], by default full list
     :param operationStations: list of operation stations carriages [49290, 49310]
-    :param notEmpty: only carriages with cargo
+    :param notEmpty: if True - only carriages with cargo will return
     :return: dataframe sorted by operation date and carriage number
     '''
     dataframe = pd.read_csv('traindata.csv',
@@ -92,22 +93,76 @@ def get_data_from_db(datetimeStart='', carriageNumbers=None, operationStations=N
         dataframe = dataframe.loc[dataframe['Код станции операции'].isin(operationStations)].dropna(how='all')
     if notEmpty:
         dataframe = dataframe.loc[dataframe['Вес груза'] > 0].dropna(how='all')
-    if DEBUG and True: print(dataframe.head(10))
-    if DEBUG and True: print(dataframe.columns)
+    if DEBUG and False: print(dataframe.head(10))
+    if DEBUG and False: print(dataframe.shape)
     return dataframe
 
-def how_long_is_in_last_operation(dataframe, carriageNumbers=None, operationStations=None, notEmpty=False):
+def only_last_operations(dataframe):
     '''
-    :param carriageNumbers:
-    :param operationStations:
-    :param notEmpty:
-    :return:
+    Remove from dataframe all non-first entry for each carriage
+    :param dataframe: sorted by carriage_number and time dataframe
+    :return: only last operations dataframe
     '''
-    frame = dataframe.loc[dataframe['Номер вагона'].isin(carriageNumbers)].loc[
-        dataframe['Код станции операции'].isin(operationStations)].loc[dataframe['Вес груза'] > 0].dropna(how='all')
-    print(frame)
+    uniqueCarriages = []
+    deletedRows = 0
+    for index, row in dataframe.iterrows():
+        if row['Номер вагона'] in uniqueCarriages:
+            deletedRows += 1
+            dataframe.drop(index, inplace=True)
+        else:
+            uniqueCarriages.append(row['Номер вагона'])
+    if DEBUG and False: print('rows deleted: '+str(deletedRows))
+    if DEBUG and False: print(dataframe.head(10))
+    if DEBUG and False: print(dataframe.shape)
+    return dataframe
 
-how_long_is_in_last_operation(get_data_from_db)
+def carriage_in_operation(dataframe, operation):
+    dataframe = dataframe.loc[dataframe['Операция'] == operation].dropna(how='all')
+    if DEBUG and True: print(dataframe.head())
+    if DEBUG and True: print('in operation '+operation+' : '+str(dataframe.shape))
+    return dataframe
+
+def carriage_in_downtime(dataframe,
+                         carriageNumbers=None,
+                         operationStations=None,
+                         notEmpty=False,
+                         downtimeLimit=DOWNTIME):
+    '''
+    Find carriages that exceeded permissible downtime
+    :param dataframe: dataframe from csv file
+    :param carriageNumbers: list of carriages eg [52942752, 52965134], by default full list
+    :param operationStations: list of operation stations carriages [49290, 49310], by default full list
+    :param notEmpty: if True - only carriages with cargo will return
+    :param downtimeLimit: permissible downtime in hours, by default use constant(24h)
+    :return: dataframe with carriages that exceeded permissible downtime
+    '''
+    nowtime = datetime.datetime.now()
+    downtimeDelta = nowtime - datetime.timedelta(days=DATE_SHIFT, hours=downtimeLimit)
+    dataframe = only_last_operations(dataframe)  #  we don't need to check operations that already ended
+    dataframe = dataframe.loc[dataframe['Дата операции'] <= downtimeDelta].dropna(how='all')
+    if carriageNumbers is not None:
+        dataframe = dataframe.loc[dataframe['Номер вагона'].isin(carriageNumbers)].dropna(how='all')
+    if operationStations is not None:
+        dataframe = dataframe.loc[dataframe['Код станции операции'].isin(operationStations)].dropna(how='all')
+    if notEmpty:
+        dataframe = dataframe.loc[dataframe['Вес груза'] > 0].dropna(how='all')
+
+    if DEBUG and False: print(dataframe.head(10))
+    if DEBUG and True: print('in downtime:'+str(dataframe.shape))
+    return dataframe
+
+# data_from_db = get_data_from_db()
+# last_operations = only_last_operations(data_from_db)
+# carriage_in_operation(carriage_in_downtime(data_from_db), 'ОКОТ')
+# carriage_in_operation(last_operations, 'ВУ23')
+# carriage_in_operation(last_operations, 'ВУ26')
+# carriage_in_operation(last_operations, 'ВУ36')
+# carriage_in_operation(last_operations, 'БРОС')
+
+def get_train(dataframe):
+    
+
+
 
 
 def save_object_to_file(objectDict):
