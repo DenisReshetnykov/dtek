@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>background-image</title>
+    <style>
+        .shit {
+        width: 50px;
+        height: 50px;
+        }
+        html {
+            background: url(https://image.freepik.com/free-photo/cute-cat-picture_1122-449.jpg) no-repeat center center fixed;
+            background-size: cover;
+        }
+
+    </style>
+    </head>
+    <script>
+        function tableclick()
+        {
+           var tbl = document.getElementById('table')
+            if (tbl.style.display == 'block')
+            {
+                tbl.style.display = 'none';
+            }
+            else if (tbl.style.display == 'none')
+            {
+                tbl.style.display = 'block';
+            }
+        }
+    </script>
+    <script>
+       function pressmark(){
+           var tblxmark = document.getElementById('tablexmark')
+            if (tblxmark.style.display == 'block')
+            {
+                tblxmark.style.display = 'none';
+            }
+            else if (tblxmark.style.display == 'none')
+            {
+                tblxmark.style.display = 'block';
+            }
+        }
+    </script>
+
+
+ <body style="margin:0px">
+ {% for object in carig %}
+    {% if object.type == 'train' %}
+         <div style="width: 80px; height: 50px; margin-left: {{object.coords.0}}px; margin-top: {{object.coords.1|add:'-50'}}px;float: left;position: absolute; visibility: visible">
+             <div style=" height: 50px; width: 50px; float: left; display: inline-block;" ><img src = 'https://kor.ill.in.ua/m/610x385/2090547.jpg' class = 'shit' id = "myDiv"></div>
+             <div style ='background-color: {{object.color}}; width: 30px; height: 30px; float: left; margin-top: 20px;' onclick="tableclick()"><h5 style="margin:0px;margin-top:25%">{{object.count_of_carriages}}/{{object.middletimeof_AFK}}</h5></div>
+
+             <table style = 'background-color: white; display: none;float: left; margin-left:80px;margin-bottom:50px;position:absolute; width: 150px; height:67px ' border="1" id = 'table' cellspacing="0" >
+                 <tr>
+                     <td width="150px">
+                         {{object.train_index}}
+                     </td>
+                 </tr>
+                 <tr>
+                     <td width="150px" >
+                         <select>
+                             {%for carig in object.listofcarriages%}
+                                 <option>
+                                     {% if carig.1 == True %}
+                                         {{carig.0}} 'Full'
+                                     {%endif%}
+                                     {% if carig.1 == False %}
+                                         {{carig.0}}
+                                     {%endif%}
+
+                                 </option>
+                             {%endfor%}
+                         </select>
+
+                     </td>
+                 </tr>
+                 <tr>
+                     <td width="150px">
+                         {{object.count_of_carriages}}
+                     </td>
+                 </tr>
+            </table>
+         </div>
+    {% endif %}
+    {% if object.type  == 'station' %}
+         <div>
+             <div style=" height: 80px; width: 80px; margin-left:{{object.coords.0}}px;margin-top:{{object.coords.1}}px;position:absolute;display: inline-block;" onclick="pressmark()">
+                <img src="http://m.sweetclipart.com/wp-content/uploads/X-Mark-Red-Clip-Art.png" height="20px", width="20px">
+             </div>
+             <table style = 'background-color: white; display: none; float: left;margin-left:{{object.coords.0}}px;margin-top:{{object.coords.1|add:"20"}}px;position:absolute;height:96px padding:0px;width:180px;overflow:hidden;white-space:nowrap;' cellspacing="0" border="1" id = 'tablexmark'>
+                     <tr>
+                         <td>
+                             {{object.countofcarriageAFK}}
+                         </td>
+                     </tr>
+                     <tr>
+                         <td>
+                            <select>
+                                  {%for ca in object.listofcarriagesonstation%}
+                                      {%if ca.1 == True%}
+                                            <option>
+                                                {{ca.0}} 'Full' {{ca.2}}
+                                            </option>
+                                      {%endif%}
+                                      {%if ca.1 == False%}
+                                            <option>
+                                                {{ca.0}} {{ca.2}}
+                                            </option>
+                                      {%endif%}
+                                  {% endfor %}
+                            </select>
+                         </td>
+                     </tr>
+             </table>
+    </div>
+    {% endif %}
+ {% endfor %}
+
+ </body>
+</html>
+
+
