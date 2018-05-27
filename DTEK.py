@@ -7,9 +7,12 @@ DATE_SHIFT = 341 #we have old base so need to add some days to existing values t
 DOWNTIME = 24 #downtime limit for red status
 DOWNTIME_PU = 45 #downtime limit for red status only for PU stations
 
-carriageDict={}
-stationDict={}
-
+STATION_POSITIONS = {45510:(100, 200)} #TODO dict of station positions
+DOWNTIME_COMPLIANT_OPERATION = ['ОКТО'] #TODO list of statuses
+COLUMNS = ['Номер вагона', 'Код станции операции', 'Название станции операции', 'Номер поезда', 'Индекс поезда',
+           'Операция', 'Дата операции', 'Код груза', 'Название груза', 'Вес груза', 'Код станции назначения',
+           'Название станции назначения', 'Код отправителя', 'Код получателя', 'Код станции отправления',
+           'Станция начала рейса', 'Дата приема груза к перевозке']
 
 class Carriage():
     carriageList = []
@@ -72,18 +75,33 @@ def create_station_objects(dataframe):
     if DEBUG and True: print('unic stations = '+str(len(Station.stationList)))
 
 
-def get_data_from_db(datetimeStart='', carriageNumbers=None, operationStations=None, notEmpty=False):
+def save_object_to_file(objectDict):
+    print(pd.DataFrame.from_dict(objectDict).iloc[0])
+    # pd.DataFrame.from_dict(objectDict).iloc[0].to_csv('carriageREST.csv', header=False, index=False, mode='a')
+
+
+
+
+########################################################################################################################
+#                                              FUNC PROGRAMING RULE :)                                                 #
+########################################################################################################################
+
+def get_data_from_db(datetimeStart='', carriageNumbers=None, operationStations=None, notEmpty=False, isPickle=False):
     '''
     Read data from CSV and then filter it by different condition
     :param datetimeStart: string in datetime format from which start reading data eg '2017-06-18 17:05:00'
     :param carriageNumbers: list of carriages eg [52942752, 52965134], by default full list
     :param operationStations: list of operation stations carriages [49290, 49310]
     :param notEmpty: if True - only carriages with cargo will return
+    :param isPickle: if True load data from picle file (for speed purpose)
     :return: dataframe sorted by operation date and carriage number
     '''
-    dataframe = pd.read_csv('traindata.csv',
-                            converters={'Дата операции': pd.to_datetime,
-                                        'Дата приема груза к перевозке': pd.to_datetime})
+    if isPickle:
+        dataframe = pd.read_pickle('traindata.pkl')
+    else:
+        dataframe = pd.read_csv('traindata.csv',
+                                converters={'Дата операции': pd.to_datetime,
+                                            'Дата приема груза к перевозке': pd.to_datetime})
     dataframe.sort_values(by=['Дата операции','Номер вагона'], inplace=True)
 
     dataframe = dataframe.loc[dataframe['Дата операции'] >= datetimeStart].dropna(how='all')
@@ -94,14 +112,14 @@ def get_data_from_db(datetimeStart='', carriageNumbers=None, operationStations=N
     if notEmpty:
         dataframe = dataframe.loc[dataframe['Вес груза'] > 0].dropna(how='all')
     if DEBUG and False: print(dataframe.head(10))
-    if DEBUG and False: print(dataframe.shape)
+    if DEBUG and True: print('loaded from db:'+str(dataframe.shape))
     return dataframe
 
 def only_last_operations(dataframe):
     '''
-    Remove from dataframe all non-first entry for each carriage
+    Remove from given dataframe all non-first entry for each carriage
     :param dataframe: sorted by carriage_number and time dataframe
-    :return: only last operations dataframe
+    :return: dateframe consisting of the most recent operations
     '''
     uniqueCarriages = []
     deletedRows = 0
@@ -117,8 +135,14 @@ def only_last_operations(dataframe):
     return dataframe
 
 def carriage_in_operation(dataframe, operation):
+    '''
+    Find items from a given dataset that are corresponds to given operation
+    :param dataframe: dataframe from csv file
+    :param operation: operation type from NSI.OPVAGON
+    :return: All carriages data that are in the specific operation status
+    '''
     dataframe = dataframe.loc[dataframe['Операция'] == operation].dropna(how='all')
-    if DEBUG and True: print(dataframe.head())
+    if DEBUG and False: print(dataframe.head())
     if DEBUG and True: print('in operation '+operation+' : '+str(dataframe.shape))
     return dataframe
 
@@ -130,10 +154,10 @@ def carriage_in_downtime(dataframe,
     '''
     Find carriages that exceeded permissible downtime
     :param dataframe: dataframe from csv file
-    :param carriageNumbers: list of carriages eg [52942752, 52965134], by default full list
-    :param operationStations: list of operation stations carriages [49290, 49310], by default full list
+    :param carriageNumbers: list of carriages eg [52942752, 52965134], if None - full list will be used
+    :param operationStations: list of operation stations carriages [49290, 49310], if None - full list will be used
     :param notEmpty: if True - only carriages with cargo will return
-    :param downtimeLimit: permissible downtime in hours, by default use constant(24h)
+    :param downtimeLimit: permissible downtime in hours, by default use global constant DOWNTIME(=24h)
     :return: dataframe with carriages that exceeded permissible downtime
     '''
     nowtime = datetime.datetime.now()
@@ -151,7 +175,7 @@ def carriage_in_downtime(dataframe,
     if DEBUG and True: print('in downtime:'+str(dataframe.shape))
     return dataframe
 
-# data_from_db = get_data_from_db()
+data_from_db = get_data_from_db(isPickle = DEBUG)
 # last_operations = only_last_operations(data_from_db)
 # carriage_in_operation(carriage_in_downtime(data_from_db), 'ОКОТ')
 # carriage_in_operation(last_operations, 'ВУ23')
@@ -159,43 +183,103 @@ def carriage_in_downtime(dataframe,
 # carriage_in_operation(last_operations, 'ВУ36')
 # carriage_in_operation(last_operations, 'БРОС')
 
-def get_train(dataframe):
-    
+def get_trains(dataframe):
+    '''
+    Create dict with train as a keys, and list of carriage as a value
+    :param dataframe: dataframe from csv file
+    :return: carriage-to-trains mapping dict
+    '''
+    dataframe = only_last_operations(dataframe)  #  To ensure uniqueness of carriages
+    trains = {}
+    for index, row in dataframe.iterrows():
+        if row['Индекс поезда'] not in trains.keys():
+            trains[row['Индекс поезда']] = [row['Номер вагона']]
+        else:
+            trains[row['Индекс поезда']].append(row['Номер вагона'])
+    if DEBUG and False: print('trains collected ' + str(len(trains)))
+    if DEBUG and False: print('trains ' + str(trains))
+    return trains
+
+def get_train_FEdata(trains, dataframe):
+    '''
+    Prepare data about trains for FrontEnd
+    :param trains: dict of trains where train numbers are keys, and list of carriages is values {train:[carriages]}
+    :param dataframe: dataframe from csv file
+    :return: trainsData in dict {train:{'position':(x,y), 'carriages':{carriage:downtime}, 'downtime':int, 'color':#HEX}}
+    '''
+    dataframe = only_last_operations(dataframe)  # To ensure uniqueness of carriages
+    trainsData = {}
+    carriagesDowntime = get_downtime_for_carriages(dataframe)
+    for train in trains:
+        trainDataframe = dataframe.loc[dataframe['Индекс поезда'] == train].dropna(how='all')
+        #  get position from station position dictionary
+        trainPosition = STATION_POSITIONS[trainDataframe[0]['Код станции операции']]
+        isEmptyTrain = True if trainDataframe[0]['Вес груза'] == 0 else False
+        carriages = {}
+        trainDowntime = 0
+        for carriage in trains[train]:
+            carriages[carriage] = carriagesDowntime[carriage]
+            trainDowntime += carriagesDowntime[carriage]
+            trainDowntime = round(trainDowntime/len(carriages))
+        if trainDowntime >= DOWNTIME:
+            color = 'ff0000'
+        elif isEmptyTrain:
+            color = '000000'
+        else:
+            color = '00ff00'
+        #  gather collected data in one dict
+        trainData = {'position': trainPosition, 'carriages': carriages, 'downtime': trainDowntime, 'color': color}
+        trainsData[train] = trainData
+    if DEBUG and True: print('trainsData collected ' + str(len(trainsData)))
+    if DEBUG and True: print('trains ' + str(trains))
+    return trainsData
+
+def get_downtime_for_carriages(dataframe):
+    '''
+    Calculate downtime for carriages, сonsidering operations that not cause
+    downtime (eg 'ОТОТ'). Such operations stored in DOWNTIME_COMPLIANT_OPERATION
+    :param dataframe: dataframe from csv file
+    :return: all carriages with downtime value rounddown to hour (if in appropriate operation, else = 0)
+             eg {52733490:5, 52943271:15, 55094742:30, 53392544:0}
+    '''
+    dataframe = only_last_operations(dataframe)  # To ensure uniqueness of carriages
+    nowtime = datetime.datetime.now()
+    carriagesDowntime = {}
+    for index, row in dataframe.iterrows():
+        if row['Операция'] in DOWNTIME_COMPLIANT_OPERATION: #  calculate downtime only for some operation
+            # print
+            carriagesDowntime[row['Номер вагона']] = nowtime - row['Дата операции']\
+                                                     +datetime.timedelta(days=DATE_SHIFT) #  shift due to test data
+        else:
+            carriagesDowntime[row['Номер вагона']] = 0
+    for key, value in carriagesDowntime.items():
+        if value > 0 : print('Downtime>0 carriege'+str(key))
+    if DEBUG and False:
+        for key in list(carriagesDowntime.keys())[0:10]:
+            print(carriagesDowntime[key])
+    return carriagesDowntime
+
+# get_train_FEdata(get_trains(data_from_db), data_from_db)
+# get_downtime_for_carriages(last_operations)
 
 
-
-
-def save_object_to_file(objectDict):
-    print(pd.DataFrame.from_dict(objectDict).iloc[0])
-    # pd.DataFrame.from_dict(objectDict).iloc[0].to_csv('carriageREST.csv', header=False, index=False, mode='a')
-
-
+########################################################################################################################
+#                                         Various auxiliary functions                                                  #
+########################################################################################################################
 def csv_to_picle(filename):
-    dataframe = pd.read_csv(filename+'.csv')
+    dataframe = get_data_from_db()
     dataframe.to_pickle(filename+'.pkl')
-    if DEBUG and True: print('file converted to: '+filename+'.pkl')
-# csv_to_picle()
+    if DEBUG and True: print('Data converted to: '+filename+'.pkl')
+# csv_to_picle('traindata')
 
+def gather_operations_dict(dataframe):
+    # dataframe.loc[dataframe['Код станции операции'] >= datetimeStart].dropna(how='all')
+    print(dataframe['Код станции операции'].groupby('Код станции операции').groups)
+    print(dataframe['Название станции операции'].groupby('Название станции операции').groups)
+    return dataframe.columns
 
-def draw_map():
-    draw_ukraine_map()
-    draw_stations_list(stations_list)
-    draw_carriages_list(carriages_list)
-    pass #TODO
+print(gather_operations_dict(data_from_db))
 
-def draw_stations_list(stations_list=None):
-    for station in stations_list:
-        draw_station(station)
-
-def draw_station(station:int):
-    stationDict[station].coord
-
-def draw_carriages_list(carriages_list=None):
-    for carriages in carriages_list:
-        draw_carriage(carriage)
-
-def draw_carriage(carriage:int):
-    carriage_coord = stationDict[carriageDict[carriage].operationStation].coord
 
 def set_carriage_color(carriage=Carriage):
     get_carriage_state(carriage)
