@@ -302,22 +302,10 @@ def get_station_data_from_csv():
     stations = gather_stations_dict(data_from_db)
     stationLoc = {}
     for key in stations.keys():
-        lat = osm2esr.loc[osm2esr['esr'].isin(range(key * 10, key * 10 + 9))][['lat']]
-        latf = lat.astype(dtype=int, copy=False)
-        print(latf)
-        print(type(latf))
-        lon = osm2esr.loc[osm2esr['esr'].isin(range(key * 10, key * 10 + 9))][['lon']]
-    #     # if lat : print('bla')
-    #     # print(locations['lat'])
-    #     print('for key: '+str(key)+' lat is '+str(lat)+' lon is '+str(lon)+'\n')
-    #     stationLoc[key] = osm2esr.loc[osm2esr['esr'].isin(range(key*10,key*10+9))][['lat','lon']]
-    # print(stationLoc)
-
-
-    # osm2esr = osm2esr.loc[osm2esr['esr'].isin(stations.keys())].dropna(how='all')
-    # print(stationLoc)
-    # a = osm2esr.loc[osm2esr['esr'].isin(range(388100,388109))][['lat','lon']]
-
+        position = osm2esr.loc[osm2esr['esr'].isin(range(key * 10, key * 10 + 9))][['lat','lon']]
+        if position.empty: continue
+        stationLoc[key] = tuple(position.iloc[0])
+    print(stationLoc)
 
 get_station_data_from_csv()
 
