@@ -3,34 +3,29 @@ from django.http import HttpResponse
 import random
 from django.template import RequestContext, loader
 from django.http import JsonResponse
+#from DTEK import get_train_FEdata
 # Create your views here.
 
 #def getting_carriages_from_base():
 #    carriages_dict = {'42033':[42,33]}
 #    return carriages_dict
-
-carig = [{'coords':['180','350'],
-         'train_index':'45510+0+91900',
-         'color':'green',
-         'train_condition': True,
-         'cariage_number':'61179032',
-         'count_of_carriages':'33',
-         'all_points':['ДРУЖКОВКА','БОГУСЛАВСКИЙ','ДРУЖКОВКА','БОГУСЛАВСКИЙ'],
-         'listofcarriages':[['5355',False],['222',True],['33232',False]],
-         'priznak': True,
-         'OTPRred': False,
-         'middletimeof_AFK':'15',
-         'type':'train'
-         },{'coords':['180','350'],
-            'stationname':'Drushkuva',
-            'listofcarriagesonstation':[['555',True,'Киев-Одесса'],['333',False,'Запорожье-Николаев'],['3434',False,'Львов-Черкасы']],
-            'countofcarriageAFK':'5',
-            'type':'station'}]
+#my_dict = get_train_FEdata()
+carig = {'5555':{'position':('123','258'),'carriages':{'20333':4,'20133':4},'downtime':15,'color':'red','type':'train'},
+        '5554':{'position':('350','800'),'carriages':{'20332':4,'20123':4},'downtime':15,'color':'red','type':'train'},
+        '5553':{'position':('350','800'),'carriages':{'20312':4,'21123':4},'downtime':15,'color':'red','type':'train'},
+         '3224':{'position':['350','800']},
+                 'trains':{'5656':{'info':[45,5]},
+                 'carriagewithdowntime':50,
+                 'carriages':{'033333':{True:20}},
+                 'route':['Kiev','Odessa'],
+                 'color':'green','type':'station'}}
+#
 
 def index(request):
-    return render(request, r'D:\dtek\dtek\polls\templates\polls\index.html', {'carig':carig})
+    return render(request, r'/Users/denisreshetnykov/Desktop/djangoHokaton/Hokaton/dtek/polls/templates/polls/index.html', {'carig':carig})
 
 def ajax(request):
     data = {}
     data['21'] = 'ajaxtrain'
     return JsonResponse(data)
+

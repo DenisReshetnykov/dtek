@@ -12,11 +12,11 @@
         }
 
         html {
-            height: 100%;
-            background: url('{% static "backgroundmap.png" %}') ;
-            background-position: center;
+            background: url('{% static "ukraine_map.jpg" %}');
             background-repeat: no-repeat;
-            background-size: cover;
+            background-size: 1900px 1000px;
+            background
+
         }
         table, th, td{
             border:1px solid black;
@@ -24,7 +24,7 @@
         }
 
         option, select{
-            background-color:#00FF00;
+            background-color:#FFFFF;
         }
         .tabletrain {
             background-color:'green';
@@ -45,9 +45,9 @@
     </style>
     </head>
     <script>
-        function tableclick()
+        function tableclick(index)
         {
-           var tbl = document.getElementById('table')
+           var tbl = document.getElementById(index)
             if (tbl.style.display == 'block')
             {
                 tbl.style.display = 'none';
@@ -89,83 +89,72 @@
             };
         }
     </script>
-    <script>
-        function ajaxtest(){
-            var data = {'21':'testing'}
-            $.ajax({
-                url: '/polls/ajax',
-                type:'Post',
-                data: data,
-                success:function(data){
-                    console.log('Work')}
-                error: function (){
-                    console.log('fail')}
-    </script>
+
 
  <body style="margin:0px">
+ {% for train_index,values in carig.items %}
+        {% if values.type  == 'train' %}
 
- {% for object in carig %}
-    {% if object.type == 'train' %}
-         <div style=" height: 50px; width: 50px; float: left; display: inline-block;position:absolute;background-color:'red';cursor:pointer" onclick="ajaxtest()"></div>
-         <div style="background-color:'blue';width: 80px; height: 50px; margin-left:{{object.coords.0}}px; margin-top:{{object.coords.1|add:'-50'}}px;float: left;position: absolute; visibility: visible" class="trainpicture">
-             <div style=" height: 50px; width: 50px; float: left; display: inline-block;position:absolute;z-index:1"><img src = '{% static "green.png" %}' class = 'shit' id = "myDiv" onclick="tableclick()"></div>
-             <h5 style="position:absolute;z-index:5;margin-bottom:0x;margin-left:10px;margin-top:37px">{{object.count_of_carriages}}/{{object.middletimeof_AFK}}</h5>
+             <div style="background-color:'blue';width: 80px; height: 50px; margin-left:{{values.position.0}}px; margin-top:{{values.position.1|add:'-50'}}px;float: left;position: absolute; visibility: visible" class="trainpicture">
+                 {% if values.color == 'green'%}
+                    <div style=" height: 50px; width: 50px; float: left; display: inline-block;cursor:pointer;position:absolute;z-index:1"><img src = '{% static "green.png" %}' class = 'shit' id = "myDiv" onclick="tableclick({{train_index}})"></div>
+                 {%endif%}
+                 {% if values.color == 'red'%}
+                    <div style=" height: 50px; width: 50px; float: left; display: inline-block;cursor:pointer;position:absolute;z-index:1"><img src = '{% static "red.png" %}' class = 'shit' id = "myDiv" onclick="tableclick({{train_index}})"></div>
+                 {%endif%}
+                 <h5 style="position:absolute;z-index:5;margin-bottom:0x;margin-left:10px;margin-top:35px">{{values.carriages|length}}/{{values.downtime}}</h5>
 
-             <table style = 'display: none;float: left; margin-left:50px;margin-bottom:50px;position:absolute; width: 150px; height:65px;z-index:2;'   id = 'table' cellspacing="0" class="tabletrain" >
-                 <tr>
-                     <td width="150px">
-                         {{object.train_index}}
-                     </td>
-                 </tr>
-                 <tr>
-                     <td width="150px" >
-                         <select>
-                             {%for carig in object.listofcarriages%}
-                                 <option>
-                                     {% if carig.1 == True %}
-                                         {{carig.0}} 'Full'
-                                     {%endif%}
-                                     {% if carig.1 == False %}
-                                         {{carig.0}}
-                                     {%endif%}
+                 <table style = 'display: none;float: left;margin-top:0px;margin-left:50px;position:absolute; width: 150px; height:65px;z-index:2;'   id = '{{train_index}}' cellspacing="0" class="tabletrain" >
+                     <tr>
+                         <td width="150px">
+                             {{train_index}}
+                         </td>
+                     </tr>
+                     <tr>
+                         <td width="150px" >
+                             <select>
+                                 {%for carig,downtime in values.carriages.items%}
+                                     <option>
+                                         {{carig}}------{{downtime}}
+                                     </option>
+                                 {%endfor%}
+                             </select>
 
-                                 </option>
-                             {%endfor%}
-                         </select>
+                         </td>
+                     </tr>
+                     <tr>
+                         <td width="150px">
+                             {{values.carriages|length}}
+                         </td>
+                     </tr>
+                </table>
+             </div>
+        {% endif %}
+        {% if values.type  == 'station' %}
+        {{values.carriages.0}}
 
-                     </td>
-                 </tr>
-                 <tr>
-                     <td width="150px">
-                         {{object.count_of_carriages}}
-                     </td>
-                 </tr>
-            </table>
-         </div>
-    {% endif %}
-    {% if object.type  == 'station' %}
          <div>
-             <div style=" height: 80px; width: 80px; margin-left:{{object.coords.0}}px;margin-top:{{object.coords.1}}px;position:absolute;display: inline-block;" onclick="pressmark()" class="mappoint">
+             <div style=" height: 80px; width: 80px; margin-left:{{values.position.0}}px;margin-top:{{values.position.1}}px;position:absolute;cursor:pointer;display: inline-block;" onclick="pressmark()" class="mappoint">
                 <img src="http://soundtransit3.org/Themes/st3/Content/Interactive_map_key/commuter_rail_icon.svg" height="30px", width="30px">
              </div>
-             <table style = 'background-color: white; display: none; float: left;margin-left:{{object.coords.0}}px;margin-top:{{object.coords.1|add:"30"}}px;position:absolute;height:42px; padding:0px;width:180px;overflow:hidden;white-space:nowrap;' cellspacing="0" id = 'tablexmark' class="tablestation">
+             <table style = 'background-color: white; display: none; float: left;margin-left:{{values.position.0}}px;margin-top:{{values.position.1|add:"30"}}px;position:absolute;height:42px; padding:0px;width:180px;overflow:hidden;white-space:nowrap;' cellspacing="0" id = 'tablexmark' class="tablestation">
                      <tr>
                          <td>
-                             {{object.countofcarriageAFK}}
+                             {{values.carriageswithdowntime}}
                          </td>
                      </tr>
                      <tr>
                          <td>
                             <select>
-                                  {%for ca in object.listofcarriagesonstation%}
-                                      {%if ca.1 == True%}
+                                  {%for c1,c2 in values.trains.items.1.train.items%}
+                                      {%if c2.carriages.items.1.items.0 == True%}
                                             <option>
-                                                {{ca.0}} 'Full' {{ca.2}}
+                                                {{c1}} 'Full' {{values.route.0}}---{{values.route.1}}
                                             </option>
                                       {%endif%}
-                                      {%if ca.1 == False%}
+                                      {%if c2.items.0 == False%}
                                             <option>
-                                                {{ca.0}} {{ca.2}}
+                                                {{c2}} {{c2}}
                                             </option>
                                       {%endif%}
                                   {% endfor %}
