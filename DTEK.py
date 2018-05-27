@@ -2,13 +2,20 @@ import datetime
 import pandas as pd
 
 DEBUG = True
-DATE_SHIFT = 341 #we have old base so need to add some days to existing values to check downtime features
+DATE_SHIFT = 341 #  we have old base so need to add some days to existing values to check downtime features
 
-DOWNTIME = 24 #downtime limit for red status
-DOWNTIME_PU = 45 #downtime limit for red status only for PU stations
+DOWNTIME = 24 #  downtime limit for red status
+DOWNTIME_PU = 45 #  downtime limit for red status only for PU stations
 
+#  There not a real position, rather our assume
 STATION_POSITIONS = {45510:(100, 200)} #TODO dict of station positions
-DOWNTIME_COMPLIANT_OPERATION = ['ОКТО'] #TODO list of statuses
+
+#  At now we assume that all operations above are appropriate for downtime calculations,
+#  but we understand that is not True
+DOWNTIME_COMPLIANT_OPERATION = ['ОДПВ', 'ОТОТ', 'ПГР2', 'ВЫГ2', 'ПРДР', 'СВПП', 'СДЧ', 'ДОСЛ', 'ПВПП', 'ВУ36', 'ОКОТ',
+                                'ВУ23', 'ЗАНЯ', 'ОСВО', 'ПСНГ', 'ПГР0', 'ПРМ', 'СВТП', 'ВУ26', 'ПГР9', 'ПОГР', 'ВЫГ1',
+                                'ВЫГР', 'ВКЛП', 'ОТСФ', 'ПСНП', 'ОСМТ', 'ИСКП', 'ПГР1', 'ПВТП', 'СПВС', 'СДГС', 'ПАДР']
+
 COLUMNS = ['Номер вагона', 'Код станции операции', 'Название станции операции', 'Номер поезда', 'Индекс поезда',
            'Операция', 'Дата операции', 'Код груза', 'Название груза', 'Вес груза', 'Код станции назначения',
            'Название станции назначения', 'Код отправителя', 'Код получателя', 'Код станции отправления',
@@ -102,8 +109,8 @@ def get_data_from_db(datetimeStart='', carriageNumbers=None, operationStations=N
         dataframe = pd.read_csv('traindata.csv',
                                 converters={'Дата операции': pd.to_datetime,
                                             'Дата приема груза к перевозке': pd.to_datetime})
-    dataframe.sort_values(by=['Дата операции','Номер вагона'], inplace=True)
 
+    dataframe.sort_values(by=['Дата операции','Номер вагона'], inplace=True)
     dataframe = dataframe.loc[dataframe['Дата операции'] >= datetimeStart].dropna(how='all')
     if carriageNumbers is not None:
         dataframe = dataframe.loc[dataframe['Номер вагона'].isin(carriageNumbers)].dropna(how='all')
@@ -272,13 +279,47 @@ def csv_to_picle(filename):
     if DEBUG and True: print('Data converted to: '+filename+'.pkl')
 # csv_to_picle('traindata')
 
-def gather_operations_dict(dataframe):
-    # dataframe.loc[dataframe['Код станции операции'] >= datetimeStart].dropna(how='all')
-    print(dataframe['Код станции операции'].groupby('Код станции операции').groups)
-    print(dataframe['Название станции операции'].groupby('Название станции операции').groups)
-    return dataframe.columns
+def gather_stations_dict(dataframe):
+    stations = {}
+    for index, row in dataframe.iterrows():
+        if row['Код станции операции'] not in stations.keys():
+            stations[row['Код станции операции']] = row['Название станции операции']
+    return stations
 
-print(gather_operations_dict(data_from_db))
+def gather_operations_list(dataframe):
+    operations = []
+    for index, row in dataframe.iterrows():
+        if row['Операция'] not in operations:
+            operations.append(row['Операция'])
+    return operations
+
+def create_stations_coord(stations):
+    pass #TODO for global constant
+
+def get_station_data_from_csv():
+    osm2esr = pd.read_csv('osm2esr.csv', sep=';')
+    # pureESR = pd.read_csv('esr.csv', sep=';')
+    stations = gather_stations_dict(data_from_db)
+    stationLoc = {}
+    for key in stations.keys():
+        lat = osm2esr.loc[osm2esr['esr'].isin(range(key * 10, key * 10 + 9))][['lat']]
+        latf = lat.astype(dtype=int, copy=False)
+        print(latf)
+        print(type(latf))
+        lon = osm2esr.loc[osm2esr['esr'].isin(range(key * 10, key * 10 + 9))][['lon']]
+    #     # if lat : print('bla')
+    #     # print(locations['lat'])
+    #     print('for key: '+str(key)+' lat is '+str(lat)+' lon is '+str(lon)+'\n')
+    #     stationLoc[key] = osm2esr.loc[osm2esr['esr'].isin(range(key*10,key*10+9))][['lat','lon']]
+    # print(stationLoc)
+
+
+    # osm2esr = osm2esr.loc[osm2esr['esr'].isin(stations.keys())].dropna(how='all')
+    # print(stationLoc)
+    # a = osm2esr.loc[osm2esr['esr'].isin(range(388100,388109))][['lat','lon']]
+
+
+get_station_data_from_csv()
 
 
 def set_carriage_color(carriage=Carriage):
