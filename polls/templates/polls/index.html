@@ -45,9 +45,9 @@
     </style>
     </head>
     <script>
-        function tableclick()
+        function tableclick(index)
         {
-           var tbl = document.getElementById('table')
+           var tbl = document.getElementById(index)
             if (tbl.style.display == 'block')
             {
                 tbl.style.display = 'none';
@@ -92,44 +92,45 @@
 
 
  <body style="margin:0px">
-
+{
  {% for train_index,values in carig.items %}
-    {% if values.type == 'train' %}
-         <div style="background-color:'blue';width: 80px; height: 50px; margin-left:{{values.position.0}}px; margin-top:{{values.position.1|add:'-50'}}px;float: left;position: absolute; visibility: visible" class="trainpicture">
-             {% if values.color == 'green'%}
-                <div style=" height: 50px; width: 50px; float: left; display: inline-block;cursor:pointer;position:absolute;z-index:1"><img src = '{% static "green.png" %}' class = 'shit' id = "myDiv" onclick="tableclick()"></div>
-             {%endif%}
-             {% if values.color == 'red'%}
-                <div style=" height: 50px; width: 50px; float: left; display: inline-block;cursor:pointer;position:absolute;z-index:1"><img src = '{% static "red.png" %}' class = 'shit' id = "myDiv" onclick="tableclick()"></div>
-             {%endif%}
-             <h5 style="position:absolute;z-index:5;margin-bottom:0x;margin-left:10px;margin-top:35px">{{values.carriages|length}}/{{values.downtime}}</h5>
+        {% if values.type == 'train' %}
+             <div style="background-color:'blue';width: 80px; height: 50px; margin-left:{{values.position.0}}px; margin-top:{{values.position.1|add:'-50'}}px;float: left;position: absolute; visibility: visible" class="trainpicture">
+                 {% if values.color == 'green'%}
+                    <div style=" height: 50px; width: 50px; float: left; display: inline-block;cursor:pointer;position:absolute;z-index:1"><img src = '{% static "green.png" %}' class = 'shit' id = "myDiv" onclick="tableclick({{train_index}})"></div>
+                 {%endif%}
+                 {% if values.color == 'red'%}
+                    <div style=" height: 50px; width: 50px; float: left; display: inline-block;cursor:pointer;position:absolute;z-index:1"><img src = '{% static "red.png" %}' class = 'shit' id = "myDiv" onclick="tableclick({{train_index}})"></div>
+                 {%endif%}
+                 <h5 style="position:absolute;z-index:5;margin-bottom:0x;margin-left:10px;margin-top:35px">{{values.carriages|length}}/{{values.downtime}}</h5>
 
-             <table style = 'display: none;float: left; margin-left:50px;margin-bottom:50px;position:absolute; width: 150px; height:65px;z-index:2;'   id = 'table' cellspacing="0" class="tabletrain" >
-                 <tr>
-                     <td width="150px">
-                         {{train_index}}
-                     </td>
-                 </tr>
-                 <tr>
-                     <td width="150px" >
-                         <select>
-                             {%for carig,downtime in values.carriages.items%}
-                                 <option>
-                                     {{carig}}------{{downtime}}
-                                 </option>
-                             {%endfor%}
-                         </select>
+                 <table style = 'display: none;float: left;margin-top:0px;margin-left:50px;position:absolute; width: 150px; height:65px;z-index:2;'   id = '{{train_index}}' cellspacing="0" class="tabletrain" >
+                     <tr>
+                         <td width="150px">
+                             {{train_index}}
+                         </td>
+                     </tr>
+                     <tr>
+                         <td width="150px" >
+                             <select>
+                                 {%for carig,downtime in values.carriages.items%}
+                                     <option>
+                                         {{carig}}------{{downtime}}
+                                     </option>
+                                 {%endfor%}
+                             </select>
 
-                     </td>
-                 </tr>
-                 <tr>
-                     <td width="150px">
-                         {{values.carriages|length}}
-                     </td>
-                 </tr>
-            </table>
-         </div>
-    {% endif %}
+                         </td>
+                     </tr>
+                     <tr>
+                         <td width="150px">
+                             {{values.carriages|length}}
+                         </td>
+                     </tr>
+                </table>
+             </div>
+        {% endif %}
+
     {% if object.type  == 'station' %}
          <div>
              <div style=" height: 80px; width: 80px; margin-left:{{object.coords.0}}px;margin-top:{{object.coords.1}}px;position:absolute;cursor:pointer;display: inline-block;" onclick="pressmark()" class="mappoint">
