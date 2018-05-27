@@ -8,7 +8,29 @@ DOWNTIME = 24 #  downtime limit for red status
 DOWNTIME_PU = 45 #  downtime limit for red status only for PU stations
 
 #  There not a real position, rather our assume
-STATION_POSITIONS = {45510:(100, 200)} #TODO dict of station positions
+UKRAINE_BOARDERS = [[48.25, 22.14],[52.35, 33.15],[44.35, 33.65],[49.25, 40.25]] #  WNSE 52.35-44.35 40.25-22.14
+STATION_POSITIONS = {38810: [49.22, 24.65], 49310: [48.45, 37.08], 40030: [46.49, 30.75], 50770: [48.77, 39.28],
+                     44100: [49.98, 36.08], 45000: [48.48, 35.12], 35000: [50.53, 26.26], 45770: [47.96, 33.41],
+                     32740: [51.22, 33.19], 47600: [46.87, 35.36], 37040: [49.86, 23.98], 33580: [49.24, 28.51],
+                     45510: [48.44, 36.03], 49100: [48.41, 37.78], 41520: [46.96, 31.98], 44280: [48.89, 36.32],
+                     40510: [46.48, 30.65], 34620: [50.96, 28.59], 46000: [47.88, 35.23], 37000: [49.84, 23.99], 36120: [49.6, 25.91], 40790: [47.89, 29.34], 48100: [47.99, 37.31], 46700: [47.91, 33.45], 45460: [48.63, 35.89], 49140: [48.63, 37.55], 46300: [47.48, 36.26], 58890: [48.05, 40.19], 41960: [47.19, 31.72], 48200: [48.29, 37.18], 42000: [49.2, 31.9], 43830: [50.2, 38.12], 40110: [46.83, 30.76], 49120: [48.51, 37.73], 48210: [48.23, 37.31], 43230: [50.33, 36.19], 46720: [47.88, 33.38], 45350: [48.33, 35.51], 49600: [48.63, 38.38], 45640: [48.48, 34.24], 43880: [50.94, 37.81], 46360: [47.81, 35.28], 34640: [50.98, 28.61], 32880: [52.18, 34.02], 20650: [51.21, 35.31], 43190: [49.71, 37.64], 45220: [48.81, 35.27], 33300: [48.77, 26.61], 43981: [50.01, 38.19], 45760: [47.92, 33.4], 41190: [48.24, 31.41], 52210: [45.23, 38.15], 37630: [49.36, 23.54], 32870: [52.04, 33.95], 48560: [47.21, 37.56], 45700: [48.35, 33.5], 42120: [48.73, 30.2], 34000: [50.2, 27.07], 43920: [50.49, 37.85], 48620: [47.6, 37.49], 44000: [50.03, 36.18], 46710: [47.96, 33.53], 45060: [48.5, 35.06], 42500: [49.07, 33.43], 33310: [48.83, 26.6], 38010: [48.43, 22.21], 47690: [47.49, 34.65], 42420: [49.43, 32.05], 49180: [48.73, 37.54], 32600: [51.19, 32.84], 34970: [51.29, 28.59], 49000: [48.97, 37.83], 34630: [50.96, 28.63]}
+
+STATION_PIXELS = {38810: [609, 263], 49310: [513, 1567], 40030: [268, 903], 50770: [553, 1798], 44100: [704, 1463],
+                  45000: [516, 1362], 35000: [772, 432], 45770: [451, 1182], 32740: [859, 1159], 47600: [315, 1387],
+                  37040: [689, 193], 33580: [611, 668], 45510: [511, 1457], 49100: [507, 1641], 41520: [326, 1032],
+                  44280: [567, 1488], 40510: [266, 893], 34620: [826, 677], 46000: [441, 1373], 37000: [686, 194],
+                  36120: [656, 396], 40790: [442, 755], 48100: [455, 1592], 46700: [445, 1187], 45460: [535, 1443],
+                  49140: [535, 1617], 46300: [391, 1481], 58890: [462, 1894], 41960: [355, 1005], 48200: [492, 1578],
+                  42000: [606, 1024], 43830: [731, 1677], 40110: [310, 904], 49120: [520, 1636], 48210: [485, 1592],
+                  43230: [747, 1474], 46720: [441, 1179], 45350: [497, 1403], 49600: [535, 1704], 45640: [516, 1269],
+                  43880: [824, 1644], 46360: [433, 1379], 34640: [829, 679], 32880: [979, 1246], 20650: [857, 1382],
+                  43190: [670, 1626], 45220: [558, 1378], 33300: [553, 469], 43981: [707, 1684], 45760: [446, 1181],
+                  41190: [486, 973], 52210: [110, 1680], 37630: [626, 147], 32870: [961, 1239], 48560: [357, 1618],
+                  45700: [500, 1192], 42120: [547, 846], 34000: [731, 517], 43920: [768, 1648], 48620: [406, 1610],
+                  44000: [710, 1473], 46710: [451, 1195], 45060: [519, 1355], 42500: [590, 1184], 33310: [560, 468],
+                  38010: [510, 7], 47690: [393, 1312], 42420: [635, 1040], 49180: [547, 1616], 32600: [855, 1123],
+                  34970: [867, 677], 49000: [577, 1646], 34630: [826, 681]}
+
 
 #  At now we assume that all operations above are appropriate for downtime calculations,
 #  but we understand that is not True
@@ -212,7 +234,7 @@ def get_train_FEdata(trains, dataframe):
     Prepare data about trains for FrontEnd
     :param trains: dict of trains where train numbers are keys, and list of carriages is values {train:[carriages]}
     :param dataframe: dataframe from csv file
-    :return: trainsData in dict {train:{'position':(x,y), 'carriages':{carriage:downtime}, 'downtime':int, 'color':#HEX}}
+    :return: trainsData in dict {train:{'position':[x,y], 'carriages':{carriage:downtime}, 'downtime':int, 'color':#HEX}}
     '''
     dataframe = only_last_operations(dataframe)  # To ensure uniqueness of carriages
     trainsData = {}
@@ -229,17 +251,32 @@ def get_train_FEdata(trains, dataframe):
             trainDowntime += carriagesDowntime[carriage]
             trainDowntime = round(trainDowntime/len(carriages))
         if trainDowntime >= DOWNTIME:
-            color = 'ff0000'
+            color = 'red'
         elif isEmptyTrain:
-            color = '000000'
+            pass# color = 'red'
         else:
-            color = '00ff00'
+            color = 'green'
         #  gather collected data in one dict
         trainData = {'position': trainPosition, 'carriages': carriages, 'downtime': trainDowntime, 'color': color}
         trainsData[train] = trainData
     if DEBUG and True: print('trainsData collected ' + str(len(trainsData)))
     if DEBUG and True: print('trains ' + str(trains))
     return trainsData
+
+
+def get_station_FEdata(stations, dataframe):
+    '''
+    :param stations:
+    :param dataframe:
+    :return: stations in dict {station:{'position':[x,y],
+                                        'trains':{ train:{'info':[carriageCount, avgDowntime],
+                                                          'carriages':{carriage:downtime},
+                                                          'route':[stationStart, stationStop]
+                                                          'color':#HEX }}}}
+    '''
+    dataframe = only_last_operations(dataframe)  # To ensure uniqueness of carriages
+    stations = {}
+
 
 def get_downtime_for_carriages(dataframe):
     '''
@@ -301,26 +338,26 @@ def get_station_data_from_csv():
     # pureESR = pd.read_csv('esr.csv', sep=';')
     stations = gather_stations_dict(data_from_db)
     stationLoc = {}
+    counter = 0
     for key in stations.keys():
         position = osm2esr.loc[osm2esr['esr'].isin(range(key * 10, key * 10 + 9))][['lat','lon']]
         if position.empty: continue
-        stationLoc[key] = tuple(position.iloc[0])
-    print(stationLoc)
+        if not min(pd.DataFrame(UKRAINE_BOARDERS)[0]) <= position['lat'].iloc[0] <= max(pd.DataFrame(UKRAINE_BOARDERS)[0]):
+            continue
+        if not min(pd.DataFrame(UKRAINE_BOARDERS)[1]) <= position['lon'].iloc[0] <= max(pd.DataFrame(UKRAINE_BOARDERS)[1]):
+            continue
+        stationLoc[key] = list(position.iloc[0].round(2))
+    return stationLoc
 
-get_station_data_from_csv()
+# print(get_station_data_from_csv())
 
+def translate_position_to_pixel(stationLoc):
+    pixelCoordinates = {}
+    ukraineSize = [52.35 - 44.35, 40.25 - 22.14]
+    mapSize = [1000, 1900]
+    for key in stationLoc.keys():
+        pixelCoordinates[key] = [round((stationLoc[key][0] - 44.35)/ukraineSize[0]*mapSize[0]),
+                                 round((stationLoc[key][1] - 22.14)/ukraineSize[1]*mapSize[1])]
+    return pixelCoordinates
 
-def set_carriage_color(carriage=Carriage):
-    get_carriage_state(carriage)
-
-def get_carriage_state(carriage:int):
-    return state
-
-
-
-
-
-
-
-
-
+print(translate_position_to_pixel(STATION_POSITIONS))
