@@ -264,7 +264,7 @@ def get_train_FEdata(trains, dataframe):
     return trainsData
 
 
-def get_station_FEdata(stations, dataframe):
+def get_station_FEdata(dataframe):
     '''
     :param stations:
     :param dataframe:
