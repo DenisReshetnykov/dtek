@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 import random
 from django.template import RequestContext, loader
+from django.http import JsonResponse
 # Create your views here.
 
 #def getting_carriages_from_base():
@@ -27,4 +28,9 @@ carig = [{'coords':['180','350'],
             'type':'station'}]
 
 def index(request):
-    return render(request, '/Users/denisreshetnykov/Desktop/djangoHokaton/Hokaton/polls/templates/polls/index.html', {'carig':carig})
+    return render(request, r'D:\dtek\dtek\polls\templates\polls\index.html', {'carig':carig})
+
+def ajax(request):
+    data = {}
+    data['21'] = 'ajaxtrain'
+    return JsonResponse(data)

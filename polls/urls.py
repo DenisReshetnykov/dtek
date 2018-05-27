@@ -1,7 +1,9 @@
 from django.conf.urls import url
+from django.urls import path
 
 from . import views
 
 urlpatterns = [
-    url(r'^$', views.index, name='index'),
+    url('main', views.index, name='index'),
+    url('ajax', views.ajax, name='index'),
 ]
