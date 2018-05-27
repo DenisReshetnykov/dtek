@@ -54,7 +54,7 @@ ROOT_URLCONF = 'Hokaton.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [r'D:\dtek\dtek\polls\templates\polls'],
+        'DIRS': [r'/Users/denisreshetnykov/Desktop/djangoHokaton/Hokaton/dtek/polls/templates/polls'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -120,5 +120,5 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "static"),
-    'D:\dtek\dtek\polls\static',
+    '/Users/denisreshetnykov/Desktop/djangoHokaton/Hokaton/dtek/static',
 )
