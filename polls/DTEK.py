@@ -7,6 +7,8 @@ DATE_SHIFT = 341 #  we have old base so need to add some days to existing values
 DOWNTIME = 24 #  downtime limit for red status
 DOWNTIME_PU = 45 #  downtime limit for red status only for PU stations
 
+FAST_MODE = True
+
 #  There not a real position, rather our assume
 UKRAINE_BOARDERS = [[48.25, 22.14],[52.35, 33.15],[44.35, 33.65],[49.25, 40.25]] #  WNSE 52.35-44.35 40.25-22.14
 STATION_POSITIONS = {38810: [49.22, 24.65], 49310: [48.45, 37.08], 40030: [46.49, 30.75], 50770: [48.77, 39.28],
@@ -150,6 +152,9 @@ def only_last_operations(dataframe):
     :param dataframe: sorted by carriage_number and time dataframe
     :return: dateframe consisting of the most recent operations
     '''
+    if FAST_MODE:
+        dataframe = pd.read_pickle('only_last_operations.pkl')
+        return dataframe
     uniqueCarriages = []
     deletedRows = 0
     for index, row in dataframe.iterrows():
@@ -161,6 +166,7 @@ def only_last_operations(dataframe):
     if DEBUG and False: print('rows deleted: '+str(deletedRows))
     if DEBUG and False: print(dataframe.head(10))
     if DEBUG and False: print(dataframe.shape)
+    if DEBUG and False: dataframe.to_pickle('only_last_operations.pkl')
     return dataframe
 
 def carriage_in_operation(dataframe, operation):
@@ -212,6 +218,28 @@ data_from_db = get_data_from_db(isPickle = DEBUG)
 # carriage_in_operation(last_operations, 'ВУ36')
 # carriage_in_operation(last_operations, 'БРОС')
 
+def get_downtime_for_carriages(dataframe):
+    '''
+    Calculate downtime for carriages, сonsidering operations that not cause
+    downtime (eg 'ОТОТ'). Such operations stored in DOWNTIME_COMPLIANT_OPERATION
+    :param dataframe: dataframe from csv file
+    :return: all carriages with downtime value rounddown to hour (if in appropriate operation, else = 0)
+             eg {52733490:5, 52943271:15, 55094742:30, 53392544:0}
+    '''
+    dataframe = only_last_operations(dataframe)  # To ensure uniqueness of carriages
+    nowtime = datetime.datetime.now()
+    carriagesDowntime = {}
+    for index, row in dataframe.iterrows():
+        if row['Операция'] in DOWNTIME_COMPLIANT_OPERATION: #  calculate downtime only for some operation
+            carriagesDowntime[row['Номер вагона']] = nowtime - row['Дата операции']\
+                                                     -datetime.timedelta(days=DATE_SHIFT) #  shift due to test data
+        else:
+            carriagesDowntime[row['Номер вагона']] = pd.to_timedelta(0)
+    if DEBUG and False:
+        for key in list(carriagesDowntime.keys())[0:10]:
+            print(carriagesDowntime[key])
+    return carriagesDowntime
+
 def get_trains(dataframe):
     '''
     Create dict with train as a keys, and list of carriage as a value
@@ -242,69 +270,60 @@ def get_train_FEdata(trains, dataframe):
     for train in trains:
         trainDataframe = dataframe.loc[dataframe['Индекс поезда'] == train].dropna(how='all')
         #  get position from station position dictionary
-        trainPosition = STATION_POSITIONS[trainDataframe[0]['Код станции операции']]
-        isEmptyTrain = True if trainDataframe[0]['Вес груза'] == 0 else False
+        if trainDataframe['Код станции операции'].iloc[0] not in STATION_PIXELS.keys():
+            trainPosition = [900, 1800]  #  Hardcoded until we find the positions of missing stations
+        else:
+            trainPosition = STATION_PIXELS[trainDataframe['Код станции операции'].iloc[0]]
+        isEmptyTrain = True if trainDataframe['Вес груза'].iloc[0] == 0 else False
         carriages = {}
-        trainDowntime = 0
+        trainDowntime = pd.to_timedelta(0)
         for carriage in trains[train]:
             carriages[carriage] = carriagesDowntime[carriage]
             trainDowntime += carriagesDowntime[carriage]
-            trainDowntime = round(trainDowntime/len(carriages))
-        if trainDowntime >= DOWNTIME:
+            trainDowntime = trainDowntime//len(carriages)
+        if trainDowntime >= pd.to_timedelta(DOWNTIME, unit='h'):
             color = 'red'
         elif isEmptyTrain:
-            pass# color = 'red'
+            color = 'black'
         else:
             color = 'green'
         #  gather collected data in one dict
         trainData = {'position': trainPosition, 'carriages': carriages, 'downtime': trainDowntime, 'color': color}
         trainsData[train] = trainData
-    if DEBUG and True: print('trainsData collected ' + str(len(trainsData)))
-    if DEBUG and True: print('trains ' + str(trains))
+    if DEBUG and False: print('trainsData collected ' + str(len(trainsData)))
+    if DEBUG and False: print('trains ' + str(trains))
     return trainsData
+# print(get_train_FEdata(get_trains(data_from_db), data_from_db))
 
-
-def get_station_FEdata(stations, dataframe):
+def get_station_FEdata(stations={}, dataframe):
     '''
     :param stations:
     :param dataframe:
-    :return: stations in dict {station:{'position':[x,y],
-                                        'trains':{ train:{'info':[carriageCount, avgDowntime],
-                                                          'carriages':{carriage:downtime},
-                                                          'route':[stationStart, stationStop]
-                                                          'color':#HEX }}}}
+    :return: stationsData in dict {station:{'position':[x,y],
+                                            'carriagesWithDowntime':int,
+                                            'trains':{train:{'info':[carriageCount, avgDowntime],
+                                                             'carriages':{carriage:[isEmpty, downtime]},
+                                                             'route':[stationStart, stationStop]
+                                                             'color':string
+                                                          }
+                                                }
+                                        }
+                                }
     '''
     dataframe = only_last_operations(dataframe)  # To ensure uniqueness of carriages
-    stations = {}
+    stationsData = {}
+    for key in STATION_PIXELS.keys():
+        stationsData[key] = {}
+        position = STATION_PIXELS[key]
+        carriagesWithDowntime = carriage_in_downtime(dataframe, operationStations=key).size[0]
+        print(carriagesWithDowntime)
+        trains = {}
+        trainsData = get_train_FEdata(get_trains(data_from_db), data_from_db)
 
 
-def get_downtime_for_carriages(dataframe):
-    '''
-    Calculate downtime for carriages, сonsidering operations that not cause
-    downtime (eg 'ОТОТ'). Such operations stored in DOWNTIME_COMPLIANT_OPERATION
-    :param dataframe: dataframe from csv file
-    :return: all carriages with downtime value rounddown to hour (if in appropriate operation, else = 0)
-             eg {52733490:5, 52943271:15, 55094742:30, 53392544:0}
-    '''
-    dataframe = only_last_operations(dataframe)  # To ensure uniqueness of carriages
-    nowtime = datetime.datetime.now()
-    carriagesDowntime = {}
-    for index, row in dataframe.iterrows():
-        if row['Операция'] in DOWNTIME_COMPLIANT_OPERATION: #  calculate downtime only for some operation
-            # print
-            carriagesDowntime[row['Номер вагона']] = nowtime - row['Дата операции']\
-                                                     +datetime.timedelta(days=DATE_SHIFT) #  shift due to test data
-        else:
-            carriagesDowntime[row['Номер вагона']] = 0
-    for key, value in carriagesDowntime.items():
-        if value > 0 : print('Downtime>0 carriege'+str(key))
-    if DEBUG and False:
-        for key in list(carriagesDowntime.keys())[0:10]:
-            print(carriagesDowntime[key])
-    return carriagesDowntime
+    return stationsData
 
-# get_train_FEdata(get_trains(data_from_db), data_from_db)
-# get_downtime_for_carriages(last_operations)
+# print(get_station_FEdata(STATION_PIXELS.keys(), data_from_db)
 
 
 ########################################################################################################################
@@ -330,8 +349,6 @@ def gather_operations_list(dataframe):
             operations.append(row['Операция'])
     return operations
 
-def create_stations_coord(stations):
-    pass #TODO for global constant
 
 def get_station_data_from_csv():
     osm2esr = pd.read_csv('osm2esr.csv', sep=';')
@@ -360,4 +377,4 @@ def translate_position_to_pixel(stationLoc):
                                  round((stationLoc[key][1] - 22.14)/ukraineSize[1]*mapSize[1])]
     return pixelCoordinates
 
-print(translate_position_to_pixel(STATION_POSITIONS))
+# print(translate_position_to_pixel(STATION_POSITIONS))
