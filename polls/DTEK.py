@@ -101,7 +101,7 @@ def get_data_from_db(db_file='traindata.csv',
     :param isPickle: if True load data from picle file (for speed purpose)
     :return: dataframe sorted by operation date and carriage number
     '''
-    with Profiler() as p():
+    with Profiler() as p:
         if isPickle:
             dataframe = pd.read_pickle('traindata.pkl')
         else:
